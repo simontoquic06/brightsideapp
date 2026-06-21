@@ -1819,11 +1819,25 @@ _bsGreetObs.observe(document.body, { childList: true, subtree: true });
 
 /* ── Android WebView click/freeze fix ──────────────────────────────── */
 (function() {
-  // Force GPU compositing layer on the app root to prevent freeze
-  document.addEventListener('DOMContentLoaded', function() {
-    document.body.style.webkitTransform = 'translateZ(0)';
-    document.body.style.transform = 'translateZ(0)';
-  });
+  // Force GPU compositing on body AND all scroll containers
+  // This creates separate compositor layers so JS work doesn't freeze scrolling
+  function promoteToGPU() {
+    var toPromote = [document.body].concat(
+      Array.from(document.querySelectorAll('.bs-content, .bsScroll, [style*="overflow"]'))
+    );
+    toPromote.forEach(function(el) {
+      if (!el) return;
+      el.style.webkitTransform = 'translateZ(0)';
+      el.style.transform = 'translateZ(0)';
+      el.style.willChange = 'transform';
+      el.style.backfaceVisibility = 'hidden';
+      el.style.webkitBackfaceVisibility = 'hidden';
+    });
+  }
+  document.addEventListener('DOMContentLoaded', promoteToGPU);
+  // Re-promote after React renders new panels
+  setTimeout(promoteToGPU, 800);
+  setTimeout(promoteToGPU, 2500);
 
   // FastClick-style: fire synthetic click immediately on touchend
   // to bypass the 300ms delay that blocks interactions in WebViews
@@ -1848,7 +1862,9 @@ _bsGreetObs.observe(document.body, { childList: true, subtree: true });
           tag === 'BUTTON' || tag === 'A' || tag === 'INPUT' || tag === 'SELECT';
         if (hasClick) {
           e.preventDefault();
-          target.click();
+          // Use rAF so click fires after the compositor frame — prevents freeze
+          var t = target;
+          requestAnimationFrame(function() { t.click(); });
           break;
         }
         target = target.parentElement;
@@ -1882,7 +1898,17 @@ _bsGreetObs.observe(document.body, { childList: true, subtree: true });
 [style*="overflow:auto"] {
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
-  will-change: scroll-position;
+  will-change: transform;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Prevent the whole page from repainting on scroll — key freeze fix */
+.bs-shell {
+  isolation: isolate;
+  contain: layout style;
 }
 
 /* ── Transition polish: snappy but not jarring ── */
