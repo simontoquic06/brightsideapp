@@ -1781,21 +1781,24 @@ class Component extends DCLogic {
   function findLogic(el) {
     const fk = Object.keys(el).find(k => k.startsWith('__reactFiber') || k.startsWith('__reactInternalInstance'));
     if (!fk) return null;
-    let fiber = el[fk];
-    while (fiber) {
+    // Safe, bounded traversal: walk the fiber subtree via an explicit
+    // stack with a visited guard so we can never get caught in a
+    // parent<->child cycle (which would freeze the main thread).
+    const start = el[fk];
+    const seen = new Set();
+    const stack = [start];
+    let guard = 0;
+    while (stack.length && guard++ < 20000) {
+      const fiber = stack.pop();
+      if (!fiber || seen.has(fiber)) continue;
+      seen.add(fiber);
       const sn = fiber.stateNode;
       if (sn && sn.logic && typeof sn.logic.STORE_KEY !== 'undefined') return sn.logic;
       if (sn && typeof sn.STORE_KEY !== 'undefined') return sn;
-      fiber = fiber.child || fiber.sibling || (fiber.return && fiber.return.child !== fiber ? fiber.return : null);
-      if (!fiber || fiber === el[fk]) break;
+      if (fiber.child) stack.push(fiber.child);
+      if (fiber.sibling) stack.push(fiber.sibling);
     }
-    // BFS fallback
-    function bfs(f, depth) {
-      if (!f || depth > 30) return null;
-      if (f.stateNode && f.stateNode.logic && typeof f.stateNode.logic.STORE_KEY !== 'undefined') return f.stateNode.logic;
-      return bfs(f.child, depth+1) || bfs(f.sibling, depth+1);
-    }
-    return bfs(el[fk], 0);
+    return null;
   }
 
   function getLogic() {
