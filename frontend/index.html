@@ -1829,9 +1829,6 @@ _bsGreetObs.observe(document.body, { childList: true, subtree: true });
       if (!el) return;
       el.style.webkitTransform = 'translateZ(0)';
       el.style.transform = 'translateZ(0)';
-      el.style.willChange = 'transform';
-      el.style.backfaceVisibility = 'hidden';
-      el.style.webkitBackfaceVisibility = 'hidden';
     });
   }
   document.addEventListener('DOMContentLoaded', promoteToGPU);
@@ -1898,17 +1895,7 @@ _bsGreetObs.observe(document.body, { childList: true, subtree: true });
 [style*="overflow:auto"] {
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
-  will-change: transform;
-  transform: translateZ(0);
-  -webkit-transform: translateZ(0);
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-}
-
-/* Prevent the whole page from repainting on scroll — key freeze fix */
-.bs-shell {
-  isolation: isolate;
-  contain: layout style;
+  will-change: scroll-position;
 }
 
 /* ── Transition polish: snappy but not jarring ── */
