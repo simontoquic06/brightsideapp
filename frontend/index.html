@@ -338,7 +338,7 @@
         <div style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:14px;">
           <div>
             <div style="font-size:13px;color:#6B7C90;font-weight:600;">{{ todayLabel }}</div>
-            <h1 style="font-family:'Poppins';font-weight:700;font-size:28px;letter-spacing:-.02em;color:#16335E;margin:7px 0 0;">Good morning, {{ greetingName }}</h1>
+            <h1 style="font-family:'Poppins';font-weight:700;font-size:28px;letter-spacing:-.02em;color:#16335E;margin:7px 0 0;"><span id="bs-time-greeting">Good morning</span>, {{ greetingName }}</h1>
           </div>
           <sc-if value="{{ gcalDisconnected }}" hint-placeholder-val="{{ true }}">
             <button onclick="{{ onStartConnect }}" style="cursor:pointer;display:flex;align-items:center;gap:9px;font-family:'Plus Jakarta Sans';font-weight:700;font-size:13.5px;color:#fff;background:linear-gradient(180deg,#3FA9D6,#2E8BC0);border:none;border-radius:12px;padding:11px 17px;box-shadow:0 8px 18px -8px rgba(46,139,192,.7);" style-hover="filter:brightness(1.05);">
@@ -1788,6 +1788,78 @@ class Component extends DCLogic {
   document.getElementById('bs-import-overlay').addEventListener('click',function(e){
     if(e.target===this) this.classList.remove('open');
   });
+})();
+</script>
+
+<style>
+/* ── Android WebView touch fix ─────────────────────────────────────── */
+html, body { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+* { -webkit-tap-highlight-color: transparent; }
+/* Prevent text selection interfering with taps */
+button, [onclick], [role="button"] { user-select: none; -webkit-user-select: none; touch-action: manipulation; cursor: pointer; }
+/* Fix for frozen/unresponsive overlays */
+#bs-import-overlay { -webkit-overflow-scrolling: touch; }
+/* Ensure nothing blocks pointer events */
+sc-if, sc-for, x-dc { display: contents; pointer-events: inherit; }
+</style>
+<script>
+/* ── Time-based greeting ────────────────────────────────────────────── */
+function bsUpdateGreeting() {
+  var el = document.getElementById('bs-time-greeting');
+  if (!el) return;
+  var h = new Date().getHours();
+  el.textContent = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+}
+// Update immediately and every minute
+bsUpdateGreeting();
+setInterval(bsUpdateGreeting, 60000);
+// Also re-run after React renders (DCLogic may re-render the element)
+var _bsGreetObs = new MutationObserver(bsUpdateGreeting);
+_bsGreetObs.observe(document.body, { childList: true, subtree: true });
+
+/* ── Android WebView click/freeze fix ──────────────────────────────── */
+(function() {
+  // Force GPU compositing layer on the app root to prevent freeze
+  document.addEventListener('DOMContentLoaded', function() {
+    document.body.style.webkitTransform = 'translateZ(0)';
+    document.body.style.transform = 'translateZ(0)';
+  });
+
+  // FastClick-style: fire synthetic click immediately on touchend
+  // to bypass the 300ms delay that blocks interactions in WebViews
+  var touchStartX, touchStartY, touchStartT;
+  document.addEventListener('touchstart', function(e) {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+    touchStartT = Date.now();
+  }, { passive: true });
+
+  document.addEventListener('touchend', function(e) {
+    var dx = e.changedTouches[0].clientX - touchStartX;
+    var dy = e.changedTouches[0].clientY - touchStartY;
+    var dt = Date.now() - touchStartT;
+    // Only fire synthetic click for short taps (not scrolls)
+    if (Math.abs(dx) < 10 && Math.abs(dy) < 10 && dt < 300) {
+      var target = e.target;
+      // Walk up to find clickable element
+      for (var i = 0; i < 6 && target; i++) {
+        var tag = target.tagName;
+        var hasClick = target.onclick || target.getAttribute('onclick') ||
+          tag === 'BUTTON' || tag === 'A' || tag === 'INPUT' || tag === 'SELECT';
+        if (hasClick) {
+          e.preventDefault();
+          target.click();
+          break;
+        }
+        target = target.parentElement;
+      }
+    }
+  }, { passive: false });
+
+  // Prevent freeze: clear any stuck touch state on scroll
+  document.addEventListener('touchcancel', function() {
+    touchStartX = touchStartY = touchStartT = null;
+  }, { passive: true });
 })();
 </script>
 </body></html>
