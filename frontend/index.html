@@ -1998,6 +1998,10 @@ function bsUpdateGreeting() {
 }
 bsUpdateGreeting();
 setInterval(bsUpdateGreeting, 60000);
-new MutationObserver(bsUpdateGreeting).observe(document.body, { childList: true, subtree: true });
+var _bsGreetTimer = null;
+new MutationObserver(function() {
+  clearTimeout(_bsGreetTimer);
+  _bsGreetTimer = setTimeout(bsUpdateGreeting, 300);
+}).observe(document.body, { childList: true, subtree: true });
 </script>
 </body></html>
