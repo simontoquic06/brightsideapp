@@ -1625,4 +1625,169 @@ class Component extends DCLogic {
   }
 })();
 </script>
+
+<style>
+#bs-import-fab{position:fixed;bottom:24px;right:24px;z-index:9000;background:linear-gradient(180deg,#3FA9D6,#2E8BC0);color:#fff;border:none;border-radius:50px;padding:13px 22px;font-family:"Plus Jakarta Sans",-apple-system,sans-serif;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 8px 18px -8px rgba(46,139,192,.7);display:flex;align-items:center;gap:8px;transition:transform .15s;}
+#bs-import-fab:hover{transform:translateY(-2px);}
+#bs-import-overlay{display:none;position:fixed;inset:0;z-index:9100;background:rgba(22,51,94,.55);backdrop-filter:blur(3px);align-items:center;justify-content:center;}
+#bs-import-overlay.open{display:flex;}
+#bs-import-modal{background:#fff;border-radius:20px;padding:32px;width:90%;max-width:480px;box-shadow:0 24px 60px -16px rgba(20,50,92,.4);font-family:"Plus Jakarta Sans",-apple-system,sans-serif;}
+#bs-import-modal h2{margin:0 0 6px;font-size:20px;font-weight:800;color:#16335E;}
+#bs-import-modal p.sub{margin:0 0 24px;font-size:13px;color:#5E768E;}
+.bs-import-option{border:2px solid #E2EBF2;border-radius:14px;padding:18px 20px;margin:0 0 12px;cursor:pointer;transition:border-color .15s,background .15s;display:flex;align-items:center;gap:14px;}
+.bs-import-option:hover{border-color:#2E8BC0;background:#EAF4FA;}
+.bs-import-option .icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex:none;}
+.bs-import-option .icon.green{background:#E4F3EF;}
+.bs-import-option .icon.blue{background:#E7F2F9;}
+.bs-import-option .title{font-weight:700;font-size:15px;color:#1B3354;}
+.bs-import-option .desc{font-size:12px;color:#5E768E;margin-top:2px;}
+#bs-import-drop{border:2px dashed #C8D9E6;border-radius:12px;padding:28px;text-align:center;margin:16px 0;cursor:pointer;transition:border-color .15s,background .15s;}
+#bs-import-drop:hover,#bs-import-drop.drag{border-color:#2E8BC0;background:#EAF4FA;}
+#bs-import-drop p{margin:6px 0;font-size:13px;color:#5E768E;}
+#bs-import-drop strong{color:#16335E;font-size:14px;}
+#bs-import-file{display:none;}
+#bs-import-result{display:none;background:#E9F6EF;border-radius:10px;padding:14px 18px;margin-top:12px;font-size:13px;color:#1A7A53;font-weight:600;}
+#bs-import-error{display:none;background:#FBF1DF;border-radius:10px;padding:14px 18px;margin-top:12px;font-size:13px;color:#C77A18;font-weight:600;}
+.bs-import-btn{background:linear-gradient(180deg,#3FA9D6,#2E8BC0);color:#fff;border:none;border-radius:11px;padding:12px 22px;font-size:14px;font-weight:700;cursor:pointer;width:100%;margin-top:8px;}
+.bs-import-btn:disabled{opacity:.5;cursor:not-allowed;}
+.bs-import-close{float:right;background:none;border:none;font-size:22px;cursor:pointer;color:#5E768E;margin:-8px -8px 0 0;}
+.bs-back{background:none;border:none;color:#2E8BC0;font-size:13px;font-weight:700;cursor:pointer;padding:0 0 16px;display:flex;align-items:center;gap:4px;}
+#bs-tmpl-link{display:block;text-align:center;font-size:12px;color:#2E8BC0;margin-top:8px;text-decoration:none;font-weight:600;}
+</style>
+
+<button id="bs-import-fab" onclick="document.getElementById('bs-import-overlay').classList.add('open');bsShowMenu()">
+  ⬆ Import Clients
+</button>
+
+<div id="bs-import-overlay" onclick="e=>{ if(e.target===this) this.classList.remove('open'); }">
+  <div id="bs-import-modal">
+    <button class="bs-import-close" onclick="document.getElementById('bs-import-overlay').classList.remove('open')">×</button>
+    <h2>Import Clients</h2>
+    <p class="sub">Add clients in bulk from QuickBooks or a spreadsheet.</p>
+    <div id="bs-menu">
+      <div class="bs-import-option" onclick="bsShowQB()">
+        <div class="icon green">📊</div>
+        <div><div class="title">Import from QuickBooks</div><div class="desc">Pull all active customers directly from your QB account</div></div>
+      </div>
+      <div class="bs-import-option" onclick="bsShowCSV()">
+        <div class="icon blue">📄</div>
+        <div><div class="title">Upload CSV / Excel</div><div class="desc">Import from a spreadsheet — works with any Excel or CSV export</div></div>
+      </div>
+    </div>
+
+    <div id="bs-qb-panel" style="display:none">
+      <button class="bs-back" onclick="bsShowMenu()">← Back</button>
+      <div class="bs-import-option" style="cursor:default;border-color:#E9F6EF;background:#E9F6EF;">
+        <div class="icon green">📊</div>
+        <div><div class="title">QuickBooks Customers</div><div class="desc">Imports all active customers including phone, email, address &amp; balance</div></div>
+      </div>
+      <button class="bs-import-btn" id="bs-qb-btn" onclick="bsImportQB()">Connect &amp; Import from QuickBooks</button>
+      <div id="bs-qb-result" class="bs-import-result"></div>
+      <div id="bs-qb-error" class="bs-import-error"></div>
+    </div>
+
+    <div id="bs-csv-panel" style="display:none">
+      <button class="bs-back" onclick="bsShowMenu()">← Back</button>
+      <div id="bs-import-drop" onclick="document.getElementById('bs-import-file').click()" ondragover="event.preventDefault();this.classList.add('drag')" ondragleave="this.classList.remove('drag')" ondrop="bsDrop(event)">
+        <strong>Drop your file here or click to browse</strong>
+        <p>Supports .xlsx, .xls, .csv</p>
+        <p id="bs-file-name" style="color:#2E8BC0;font-weight:600;"></p>
+      </div>
+      <input type="file" id="bs-import-file" accept=".csv,.xlsx,.xls" onchange="bsFileChosen(this)">
+      <a id="bs-tmpl-link" href="/api/import/template" download>⬇ Download blank template</a>
+      <button class="bs-import-btn" id="bs-csv-btn" onclick="bsUploadCSV()" disabled>Upload &amp; Import</button>
+      <div id="bs-csv-result" class="bs-import-result"></div>
+      <div id="bs-csv-error" class="bs-import-error"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const API = (window.__BRIGHTSIDE_API||'').replace(/\/$/,'');
+  let chosenFile = null;
+
+  window.bsShowMenu = ()=>{
+    ['bs-menu','bs-qb-panel','bs-csv-panel'].forEach(id=>{
+      document.getElementById(id).style.display = id==='bs-menu'?'block':'none';
+    });
+    ['bs-qb-result','bs-qb-error','bs-csv-result','bs-csv-error'].forEach(id=>{
+      const el=document.getElementById(id); if(el){el.style.display='none';el.textContent='';}
+    });
+  };
+  window.bsShowQB  = ()=>{ document.getElementById('bs-menu').style.display='none'; document.getElementById('bs-qb-panel').style.display='block'; };
+  window.bsShowCSV = ()=>{ document.getElementById('bs-menu').style.display='none'; document.getElementById('bs-csv-panel').style.display='block'; };
+
+  window.bsDrop = (e)=>{
+    e.preventDefault();
+    document.getElementById('bs-import-drop').classList.remove('drag');
+    const f = e.dataTransfer.files[0]; if(!f) return;
+    chosenFile = f;
+    document.getElementById('bs-file-name').textContent = f.name;
+    document.getElementById('bs-csv-btn').disabled = false;
+  };
+  window.bsFileChosen = (input)=>{
+    chosenFile = input.files[0]; if(!chosenFile) return;
+    document.getElementById('bs-file-name').textContent = chosenFile.name;
+    document.getElementById('bs-csv-btn').disabled = false;
+  };
+
+  window.bsImportQB = async ()=>{
+    const btn = document.getElementById('bs-qb-btn');
+    const res = document.getElementById('bs-qb-result');
+    const err = document.getElementById('bs-qb-error');
+    res.style.display='none'; err.style.display='none';
+    btn.disabled=true; btn.textContent='Importing…';
+    try {
+      // Check if QB is connected first
+      const status = await fetch(API+'/api/quickbooks/status').then(r=>r.json());
+      if(!status.connected){
+        // Redirect to OAuth
+        const authRes = await fetch(API+'/api/quickbooks/auth-url',{method:'POST'}).then(r=>r.json());
+        if(authRes.url){ window.location.href=authRes.url; return; }
+        throw new Error('QuickBooks not connected. Connect it in Settings first.');
+      }
+      const data = await fetch(API+'/api/quickbooks/import-customers').then(r=>r.json());
+      if(data.error) throw new Error(data.error);
+      res.textContent = '✓ Imported '+data.imported+' customers from QuickBooks!';
+      res.style.display='block';
+      btn.textContent='Import Again';
+    } catch(e){
+      err.textContent='⚠ '+e.message; err.style.display='block';
+      btn.textContent='Try Again';
+    }
+    btn.disabled=false;
+  };
+
+  window.bsUploadCSV = async ()=>{
+    if(!chosenFile) return;
+    const btn = document.getElementById('bs-csv-btn');
+    const res = document.getElementById('bs-csv-result');
+    const err = document.getElementById('bs-csv-error');
+    res.style.display='none'; err.style.display='none';
+    btn.disabled=true; btn.textContent='Uploading…';
+    try {
+      const fd = new FormData(); fd.append('file', chosenFile);
+      const data = await fetch(API+'/api/import/csv',{method:'POST',body:fd}).then(r=>r.json());
+      if(data.error) throw new Error(data.error);
+      let msg = '✓ Imported '+data.imported+' clients!';
+      if(data.skipped) msg += ' ('+data.skipped+' rows skipped — missing name)';
+      res.textContent=msg; res.style.display='block';
+      btn.textContent='Upload Another';
+      chosenFile=null;
+      document.getElementById('bs-file-name').textContent='';
+      document.getElementById('bs-import-file').value='';
+    } catch(e){
+      err.textContent='⚠ '+e.message; err.style.display='block';
+      btn.textContent='Try Again';
+    }
+    btn.disabled=false;
+  };
+
+  // Close overlay when clicking outside modal
+  document.getElementById('bs-import-overlay').addEventListener('click',function(e){
+    if(e.target===this) this.classList.remove('open');
+  });
+})();
+</script>
 </body></html>

@@ -24,6 +24,7 @@ app.use('/api/texts', require('./routes/texts'));
 app.use('/api/payments', require('./routes/payments'));
 app.use('/api/google', require('./routes/google'));
 app.use('/api/quickbooks', require('./routes/quickbooks'));
+app.use('/api/import', require('./routes/import'));
 
 // Health check
 app.get('/api/health', (req, res) => res.json({ ok: true, ts: new Date().toISOString() }));
