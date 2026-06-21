@@ -2,6 +2,8 @@
 <html><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script>/* Point the app at its own backend so real integrations (Google Calendar, QuickBooks, texts) are used instead of the demo fallbacks. */
+window.__BRIGHTSIDE_API = window.location.origin;</script>
 <script>/**
  * @license React
  * react.production.min.js
