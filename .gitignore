@@ -1,0 +1,5 @@
+backend/node_modules/
+backend/.env
+backend/db/brightside.db
+*.log
+.DS_Store

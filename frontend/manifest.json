@@ -1,0 +1,18 @@
+{
+  "name": "Brightside Home Services",
+  "short_name": "Brightside",
+  "description": "Field operations app for Brightside Home Services",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#16335E",
+  "theme_color": "#16335E",
+  "icons": [
+    {
+      "src": "/assets/brightside-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

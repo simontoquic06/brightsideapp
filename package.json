@@ -1,0 +1,11 @@
+{
+  "name": "brightside-home-services",
+  "version": "1.0.0",
+  "description": "Brightside Home Services — Field Operations App",
+  "scripts": {
+    "start": "cd backend && node server.js",
+    "dev": "cd backend && nodemon server.js",
+    "setup": "cd backend && npm install && node db/seed.js",
+    "seed": "cd backend && node db/seed.js"
+  }
+}
