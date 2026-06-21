@@ -2091,8 +2091,6 @@ class Component extends DCLogic {
 })();
 </script>
 
-<!-- DEBUG STATUS (remove after testing) -->
-<div id="bsdebug" style="position:fixed;top:8px;left:8px;right:8px;background:rgba(0,0,0,0.75);color:#fff;font-family:monospace;font-size:11px;padding:8px;border-radius:6px;z-index:99999;pointer-events:none;line-height:1.5;"></div>
 
 <!-- SPLASH SCREEN -->
 <div id="bss" style="position:fixed;inset:0;background:#fff;display:flex;align-items:center;justify-content:center;z-index:9998;pointer-events:none;">
@@ -2100,37 +2098,12 @@ class Component extends DCLogic {
 </div>
 
 <script>
-var _dbg = document.getElementById('bsdebug');
-function dbg(msg) {
-  if(!_dbg) return;
-  _dbg.innerHTML += msg + '<br>';
-}
-
-dbg('JS started');
-
 /* SPLASH */
 (function(){
   setTimeout(function(){try{var l=document.getElementById('bssl');if(l){l.style.opacity='1';l.style.transform='translateY(0)';}}catch(e){}},80);
-  function hide(){
-    try{var s=document.getElementById('bss');if(s){s.style.opacity='0';s.style.transition='opacity 0.4s ease';setTimeout(function(){try{if(s.parentNode)s.parentNode.removeChild(s);}catch(e){}},450);}}catch(e){}
-    dbg('splash hidden');
-  }
-  setTimeout(hide, 2500); // hard fallback at 2.5s
-  var polls=0;
-  function poll(){
-    try{
-      var btns=document.querySelectorAll('.bs-nav button');
-      dbg('poll '+polls+': nav btns='+btns.length+' React='+(!!window.React));
-      if(btns.length>2){setTimeout(hide,400);return;}
-    }catch(e){dbg('poll err:'+e.message);}
-    if(++polls<30) setTimeout(poll,200);
-  }
-  if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',function(){dbg('DOMContentLoaded');poll();});}
-  else{poll();}
+  function hide(){try{var s=document.getElementById('bss');if(s){s.style.opacity='0';s.style.transition='opacity 0.4s ease';setTimeout(function(){if(s.parentNode)s.parentNode.removeChild(s);},450);}}catch(e){}}
+  setTimeout(hide, 3000);
 })();
-
-dbg('React='+!!window.React+' RD='+!!window.ReactDOM);
-
 /* FastClick */
 (function(){
   var sx=0,sy=0,st=0;
@@ -2162,7 +2135,6 @@ dbg('React='+!!window.React+' RD='+!!window.ReactDOM);
 /* Log when React/dc-runtime boots */
 var _dcCheck=0;
 function checkDC(){
-  dbg('dcCheck '+_dcCheck+': React='+!!window.React+' Babel='+!!window.Babel);
   if(++_dcCheck<10) setTimeout(checkDC,1000);
 }
 setTimeout(checkDC,500);
