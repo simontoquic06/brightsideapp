@@ -1862,4 +1862,248 @@ _bsGreetObs.observe(document.body, { childList: true, subtree: true });
   }, { passive: true });
 })();
 </script>
+
+<style>
+/* ── Pixel 9 / Mobile Layout Polish ──────────────────────────────────────────
+   Pixel 9 = 411×923 CSS px, 2.625 DPR, Android 15 (3-button or gesture nav)
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/* Safe-area insets for Android gesture nav bar & status bar */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .bs-shell { padding-bottom: env(safe-area-inset-bottom); }
+  body { padding-top: env(safe-area-inset-top); }
+}
+
+/* ── Smooth scrolling & GPU compositing on all scrollable areas ── */
+.bsScroll,
+.bs-content,
+[style*="overflow-y"],
+[style*="overflow: auto"],
+[style*="overflow:auto"] {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  will-change: scroll-position;
+}
+
+/* ── Transition polish: snappy but not jarring ── */
+button, [role="button"], a, .bs-nav button {
+  transition: opacity 0.12s ease, background 0.15s ease, transform 0.12s ease;
+  -webkit-transition: opacity 0.12s ease, background 0.15s ease, transform 0.12s ease;
+}
+button:active, [role="button"]:active, .bs-nav button:active {
+  transform: scale(0.96);
+  opacity: 0.82;
+}
+
+/* ── Minimum 44px tap targets on mobile ── */
+@media (max-width: 880px) {
+  button, [role="button"], .bs-nav button, input[type="checkbox"], select {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Bottom nav bar: fixed to bottom, above Android nav */
+  .bs-sidebar {
+    position: fixed !important;
+    bottom: 0 !important;
+    top: auto !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    padding: 0 8px env(safe-area-inset-bottom, 0px) !important;
+    z-index: 100;
+    box-shadow: 0 -2px 12px rgba(0,0,0,0.18);
+    /* Re-use the gradient */
+    background: linear-gradient(180deg,#16335E 0%,#143055 100%) !important;
+  }
+
+  /* Logo / header area in sidebar — hide on mobile (show only nav) */
+  .bs-sidebar > div:first-child,
+  .bs-sidebar > p,
+  .bs-foot {
+    display: none !important;
+  }
+
+  /* Nav row: evenly spaced, icons + short labels */
+  .bs-nav {
+    flex-direction: row !important;
+    justify-content: space-around !important;
+    align-items: center !important;
+    gap: 0 !important;
+    padding: 6px 0 !important;
+    overflow-x: visible !important;
+  }
+
+  .bs-nav button {
+    flex: 1 !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 10px !important;
+    padding: 6px 4px !important;
+    min-width: 0 !important;
+    border-radius: 10px !important;
+    gap: 3px !important;
+  }
+
+  /* Nav icon size on mobile */
+  .bs-nav button svg,
+  .bs-nav button img {
+    width: 22px !important;
+    height: 22px !important;
+  }
+
+  /* Content area: add bottom padding so it's not hidden under fixed nav bar */
+  .bs-content {
+    padding: 16px 14px calc(72px + env(safe-area-inset-bottom, 0px)) !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* Shell: column layout, content first */
+  .bs-shell {
+    flex-direction: column !important;
+    min-height: 100dvh !important;
+  }
+
+  /* Cards: full width, no horizontal overflow */
+  [style*="grid-template-columns"],
+  [style*="display:grid"],
+  [style*="display: grid"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Prevent any element from causing horizontal scroll */
+  * { max-width: 100vw; }
+  img, video, iframe { max-width: 100% !important; height: auto !important; }
+
+  /* Stat cards row: 2-column grid on Pixel 9 */
+  .bs-stats-row {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+  }
+
+  /* Table / list cards: make text legible at 411px */
+  table { font-size: 13px !important; }
+  td, th { padding: 8px 6px !important; }
+
+  /* Modal / overlay: full-screen on mobile */
+  #bs-import-overlay > div {
+    width: 94vw !important;
+    max-height: 88dvh !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    margin: auto !important;
+  }
+
+  /* Floating import button: move above nav bar */
+  #bs-import-fab {
+    bottom: calc(68px + env(safe-area-inset-bottom, 0px)) !important;
+    right: 16px !important;
+  }
+
+  /* Form inputs: full width, large enough to not zoom on iOS/Android */
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="number"],
+  input[type="search"],
+  select,
+  textarea {
+    font-size: 16px !important; /* prevents auto-zoom */
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Header row on each page: stack vertically */
+  .bs-page-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+  .bs-page-header button {
+    width: 100% !important;
+  }
+}
+
+/* ── Smooth page/card entrance animation ── */
+@keyframes bsSlideIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.bs-content > * {
+  animation: bsSlideIn 0.22s ease both;
+}
+
+/* ── Scrollbar: hide on mobile, thin on desktop ── */
+@media (max-width: 880px) {
+  ::-webkit-scrollbar { display: none; }
+  * { scrollbar-width: none; }
+}
+@media (min-width: 881px) {
+  .bsScroll::-webkit-scrollbar { width: 5px; height: 5px; }
+  .bsScroll::-webkit-scrollbar-thumb { background: #C4D3E0; border-radius: 4px; }
+}
+</style>
+
+<script>
+/* ── Pixel 9 runtime fixes ────────────────────────────────────────── */
+(function() {
+  function applyMobileFixes() {
+    if (window.innerWidth > 880) return;
+
+    // Move sidebar to end of body so it renders on top of content in DOM order
+    var sidebar = document.querySelector('.bs-sidebar');
+    var shell = document.querySelector('.bs-shell');
+    if (sidebar && shell && sidebar.parentElement === shell) {
+      shell.appendChild(sidebar);
+    }
+
+    // Shorten nav button labels for small screens
+    var navBtns = document.querySelectorAll('.bs-nav button');
+    navBtns.forEach(function(btn) {
+      // Wrap text nodes that are too long
+      btn.childNodes.forEach(function(node) {
+        if (node.nodeType === 3) { // text node
+          var txt = node.textContent.trim();
+          // Shorten known long labels
+          var short = { 'Dashboard': 'Home', 'Clients': 'Clients', 'Schedule': 'Jobs',
+                        'Messages': 'Texts', 'Money': 'Money', 'Settings': 'Settings' };
+          if (short[txt]) node.textContent = short[txt];
+        }
+      });
+    });
+
+    // Ensure all scrollable divs have momentum scrolling
+    var scrollers = document.querySelectorAll('[style*="overflow"]');
+    scrollers.forEach(function(el) {
+      el.style.webkitOverflowScrolling = 'touch';
+    });
+  }
+
+  // Run after render
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', applyMobileFixes);
+  } else {
+    applyMobileFixes();
+  }
+  // Re-run after React renders content
+  setTimeout(applyMobileFixes, 800);
+  setTimeout(applyMobileFixes, 2000);
+
+  // Passive scroll listeners for perf
+  document.addEventListener('scroll', function(){}, { passive: true });
+  document.addEventListener('wheel', function(){}, { passive: true });
+
+  // Prevent pinch-zoom jank (keep double-tap zoom off)
+  var lastTap = 0;
+  document.addEventListener('touchend', function(e) {
+    var now = Date.now();
+    if (now - lastTap < 300 && e.touches.length === 0) e.preventDefault();
+    lastTap = now;
+  }, { passive: false });
+})();
+</script>
 </body></html>
