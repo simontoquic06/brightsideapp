@@ -76,7 +76,13 @@ router.get('/callback', async (req, res) => {
 router.get('/status', (req, res) => {
   const db = getDb();
   const settings = db.prepare('SELECT gcal_connected FROM settings WHERE id = 1').get();
-  res.json({ connected: !!(settings?.gcal_connected) });
+  res.json({
+    connected: !!(settings?.gcal_connected),
+    version: 'oauth-wired-v2',
+    configured: !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET),
+    publicUrl: process.env.PUBLIC_URL || null,
+    redirectUri: `${process.env.PUBLIC_URL || '(PUBLIC_URL not set)'}/api/google/callback`,
+  });
 });
 
 router.post('/sync', async (req, res) => {
