@@ -1780,15 +1780,30 @@ class Component extends DCLogic {
   const API = (window.__BRIGHTSIDE_API || '').replace(/\/$/, '');
 
   /* ── Find DCLogic instance via React fiber internals ─────────────── */
-  function findLogic(el) {
-    const fk = Object.keys(el).find(k => k.startsWith('__reactFiber') || k.startsWith('__reactInternalInstance'));
-    if (!fk) return null;
-    // Safe, bounded traversal: walk the fiber subtree via an explicit
-    // stack with a visited guard so we can never get caught in a
-    // parent<->child cycle (which would freeze the main thread).
-    const start = el[fk];
+  function logicFromFiber(start) {
+    // Walk UP the fiber tree (component instances live above host DOM
+    // fibers), bounded with a visited set so a malformed tree can
+    // never freeze the main thread.
     const seen = new Set();
-    const stack = [start];
+    let fiber = start, guard = 0;
+    while (fiber && guard++ < 500 && !seen.has(fiber)) {
+      seen.add(fiber);
+      const sn = fiber.stateNode;
+      if (sn && sn.logic && typeof sn.logic.STORE_KEY !== 'undefined') return sn.logic;
+      if (sn && typeof sn.STORE_KEY !== 'undefined') return sn;
+      fiber = fiber.return;
+    }
+    return null;
+  }
+
+  function findLogic(el) {
+    const fk = Object.keys(el).find(k => k.startsWith('__reactFiber') || k.startsWith('__reactInternalInstance') || k.startsWith('__reactContainer'));
+    if (!fk) return null;
+    const up = logicFromFiber(el[fk]);
+    if (up) return up;
+    // Downward bounded sweep as fallback (e.g. when starting at the root container)
+    const seen = new Set();
+    const stack = [el[fk]];
     let guard = 0;
     while (stack.length && guard++ < 20000) {
       const fiber = stack.pop();
@@ -1804,17 +1819,19 @@ class Component extends DCLogic {
   }
 
   function getLogic() {
-    const roots = [document.getElementById('root'), document.getElementById('app'),
-                   document.querySelector('[id]'), document.body];
-    for (const el of roots) {
+    // Prefer deep React-rendered elements: their fibers sit below the
+    // component instance, so the upward walk finds it directly.
+    const candidates = [
+      document.querySelector('.bs-nav button'),
+      document.querySelector('.bs-content *'),
+      document.querySelector('.bs-shell'),
+      document.getElementById('root'), document.getElementById('app'),
+      document.body,
+    ];
+    for (const el of candidates) {
       if (!el) continue;
       const logic = findLogic(el);
       if (logic) return logic;
-      // also check direct children
-      for (const child of el.children || []) {
-        const l2 = findLogic(child);
-        if (l2) return l2;
-      }
     }
     return null;
   }
